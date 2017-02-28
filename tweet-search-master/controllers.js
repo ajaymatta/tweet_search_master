@@ -19,33 +19,45 @@ app.controller('TwitterController', function($scope,$q, $http, twitterService) {
 			$scope.twitterSearchResult = data;
 			data = data.statuses;
             $scope.tweets = $scope.tweets.concat(data);
+			localStorage.setItem("counter", 0);
         },function(){
             $scope.rateLimitError = true;
         });
 	}
 	
 	$scope.twitterSentiment = function() {
+		$scope.sentiResult = {};
+		var resultObject = {};
+		resultObject.tweet = {};
+		resultObject.senti = {};
+		resultObject.userName = {};
+		resultObject.userLocation ={};
 		var config = {
             headers : {'X-Mashape-Authorization' : 'xA44CDJwt1mshfrJ1cRwBxU5AVYCp1T2oFojsnmd0sMU8AYhOg', 
 					   'Content-Type': 'application/json'}	
 		}
 		
-		for (var i = 0; i < $scope.twitterSearchResult.search_metadata.count; i++)	{
+		//for (var i = 0; i < $scope.twitterSearchResult.search_metadata.count; i++)	{
 			var data = $.param({
-				text: $scope.tweets[i].text
+				text: $scope.tweets[parseInt(localStorage.getItem("counter"))].text
 			});
-			$scope.tweets[i].label = {};
+			resultObject.tweet = $scope.tweets[parseInt(localStorage.getItem("counter"))].text;
 			$http.post('https://japerk-text-processing.p.mashape.com/sentiment/',
 						data, 
 						config).then(
 				function (data, status, headers, config) {
-						//$scope.tweets[i].truncated = data.label;
+						
+						resultObject.senti = data.data.label;						
 						console.log((data));
-						//console.log($scope.tweets[i]);
+						console.log(resultObject);
+						if (parseInt(localStorage.getItem("counter")) < $scope.twitterSearchResult.search_metadata.count) {
+							$scope.twitterSentiment();
+							localStorage.setItem("counter", parseInt(localStorage.getItem("counter")) +1 )
+						}
 				},function (data, status, header, config) {
 						alert(data);
 				});	
-		}		
+//		}		
     }
 
     //when the user clicks the connect twitter button, the popup authorization window opens
